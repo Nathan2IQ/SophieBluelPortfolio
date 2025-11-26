@@ -1,6 +1,6 @@
 import { fetchJSON } from "./utils.js";
 
-async function generatePortfolio() {
+export async function generatePortfolio() {
   try {
     const data = await fetchJSON("works");
     const divPortfolio = document.querySelector(".gallery");
@@ -22,9 +22,6 @@ async function generatePortfolio() {
     console.error("Erreur lors de la récupération des données :", error);
   }
 }
-
-// Génère la galerie au chargement de la page
-generatePortfolio();
 
 // Fonction pour afficher les filtres
 async function generateFilters() {
@@ -75,9 +72,7 @@ allButton.addEventListener("click", () => {
 
 navFilter.appendChild(allButton);
 
-generateFilters();
-
-Promise.all([generateModalWorks(), generateFilters()])
+Promise.all([generatePortfolio(), generateFilters()])
   .then(() => {
     console.log("Modale works and filters generated");
   })

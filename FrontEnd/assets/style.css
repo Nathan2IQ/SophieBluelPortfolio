@@ -314,7 +314,7 @@ footer nav ul {
 }
 
 .form__txt__input {
-  margin: 10px;
+  margin: 10px 0;
   padding: 10px;
   width: 380px;
   height: 35px;
@@ -391,6 +391,10 @@ body.edit_mode_on .portfolio__header a {
   color: black;
 }
 
+.portfolio__header i {
+  color: black;
+}
+
 .logout__btn {
   font-size: 1.2em;
   color: black;
@@ -399,7 +403,7 @@ body.edit_mode_on .portfolio__header a {
 }
 
 .logout__btn:hover {
-  color: #b1663c;
+  font-weight: bold;
 }
 
 /* ci-dessous se trouve le syle de la modale */
@@ -505,7 +509,7 @@ body.edit_mode_on .portfolio__header a {
   cursor: pointer;
 }
 
-.modal__add__form {
+.modal__add__form form {
   display: flex;
   position: relative;
   flex-direction: column;
@@ -594,4 +598,8 @@ body.edit_mode_on .portfolio__header a {
   border: 1px #ffffff;
   box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
   cursor: pointer;
+}
+
+.display__none {
+  display: none;
 }
