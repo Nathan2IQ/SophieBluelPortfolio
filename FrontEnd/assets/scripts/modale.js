@@ -1,17 +1,9 @@
-import { fetchJSON } from "./utils.js";
+import { generateFigure } from "./script.js";
+import { postData } from "./utils.js";
 
 const toggleModal = () => {
   const modal = document.querySelector(".modal");
   const closeModalBtn = document.querySelector(".closer");
-
-  // Ouvrir la modale
-  document.querySelectorAll(".modal__opener").forEach((opener) => {
-    opener.addEventListener("click", (e) => {
-      e.preventDefault();
-      modal.style.display = "flex";
-      console.log("Modale ouverte");
-    });
-  });
 
   // Fermer la modale
   closeModalBtn.addEventListener("click", () => {
@@ -36,38 +28,6 @@ const toggleModal = () => {
 
 toggleModal();
 
-async function generateModalWorks() {
-  try {
-    const data = await fetchJSON("works");
-
-    data.forEach((work) => {
-      const divModal = document.querySelector(".modal__works");
-
-      const workElement = document.createElement("figure");
-      workElement.dataset.id = work.id;
-      workElement.dataset.category = work.categoryId;
-
-      const workImage = document.createElement("img");
-      workImage.src = work.imageUrl;
-
-      const workDelete = document.createElement("i");
-      workDelete.className = "fa-solid fa-trash-can";
-      workDelete.classList.add("modal__works__delete");
-
-      divModal.appendChild(workElement);
-      workElement.appendChild(workImage);
-      workElement.appendChild(workDelete);
-    });
-
-    //si il y a une erreur, je l'affiche
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-// je lance la fonction
-generateModalWorks();
-
 function toggleView(showId, hideId) {
   const show = document.getElementById(showId);
   const hide = document.getElementById(hideId);
@@ -88,66 +48,6 @@ document.querySelector(".backBtn").addEventListener("click", (e) => {
   e.preventDefault();
   toggleView("modal__works", "modal__add");
 });
-
-// Supprimer un travail
-document.querySelector(".modal__works").addEventListener("click", async (e) => {
-  // Vérifier si l'élément cliqué est une icône de suppression
-  if (e.target.classList.contains("modal__works__delete")) {
-    const workElement = e.target.closest("figure");
-    const workId = workElement.dataset.id;
-
-    const token = localStorage.getItem("token");
-
-    try {
-      // Appeler l'API pour supprimer l'élément
-      const url = `http://localhost:5678/api/works/${workId}`;
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete the work");
-      }
-
-      // Supprimer l'élément du DOM
-      workElement.remove();
-
-      // Supprimer l'élément correspondant dans la galerie principale
-      const galleryElement = document.querySelector(
-        `.gallery figure[data-id="${workId}"]`
-      );
-      if (galleryElement) {
-        galleryElement.remove();
-      }
-    } catch (error) {
-      console.error(error.message);
-    }
-  }
-});
-
-//je recup les categories pour les afficher dans le select
-async function getCategoryAdd() {
-  try {
-    const data = await fetchJSON("categories");
-
-    const select = document.getElementById("category");
-
-    data.forEach((category) => {
-      const option = document.createElement("option");
-      option.value = category.id;
-      option.textContent = category.name;
-      select.appendChild(option);
-    });
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-getCategoryAdd();
 
 // ce code est pour la prévisualisation de l'image avant de l'envoyer
 document.getElementById("image").addEventListener("change", (e) => {
@@ -179,17 +79,9 @@ document.getElementById("formAdd").addEventListener("submit", async (e) => {
 
   const form = e.target;
   const formData = new FormData(form);
-  const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:5678/api/works", {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    const response = await postData("works", formData, true, true);
 
     if (!response.ok) {
       throw new Error(`Failed to add the work: ${response.status}`);
@@ -205,10 +97,14 @@ document.getElementById("formAdd").addEventListener("submit", async (e) => {
     }
 
     // Mettre à jour la galerie principale
-    document.querySelector(".gallery").innerHTML = ""; // Vider la galerie
 
-    // Mettre a jour les travaux de la modale
-    document.querySelector(".modal__works").innerHTML = ""; // Vider les travaux de la modale
+    const newWork = await response.json();
+    window.allWorks.push(newWork);
+
+    const newFigure = generateFigure(newWork);
+    const newFigureForModal = generateFigure(newWork, true);
+    document.querySelector(".gallery").appendChild(newFigure);
+    document.querySelector(".modal__works").appendChild(newFigureForModal);
 
     // Afficher la modale de travaux
     const modalAdd = document.getElementById("modal__add");

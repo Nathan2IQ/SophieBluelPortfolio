@@ -17,9 +17,6 @@
     <link rel="stylesheet" href="./assets/style.css" />
   </head>
   <body>
-    <div class="edit__mode">
-      <p><i class="fa-regular fa-pen-to-square"></i>Mode édition</p>
-    </div>
     <header>
       <h1>Sophie Bluel <span>Architecte d'intérieur</span></h1>
       <nav>
@@ -58,9 +55,7 @@
       <section id="portfolio">
         <div class="portfolio__header">
           <h2>Mes projets</h2>
-          <a href="#modal" class="modal__opener"
-            ><p><i class="fa-regular fa-pen-to-square"></i>modifier</p></a
-          >
+          <span id="modalBtnCtn"></span>
         </div>
 
         <!-- ci-dessous se trouve le code de la modale -->
@@ -157,7 +152,7 @@
       src="https://kit.fontawesome.com/24555f729d.js"
       crossorigin="anonymous"
     ></script>
-    <script src="./assets/scripts/script.js" type="module"></script>
     <script src="./assets/scripts/modale.js" type="module"></script>
+    <script src="./assets/scripts/script.js" type="module"></script>
   </body>
 </html>
