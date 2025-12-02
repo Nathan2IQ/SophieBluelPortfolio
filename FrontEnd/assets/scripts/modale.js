@@ -49,14 +49,74 @@ document.querySelector(".backBtn").addEventListener("click", (e) => {
   toggleView("modal__works", "modal__add");
 });
 
+// Vérification dynamique du formulaire
+function checkFormValidity() {
+  const imageInput = document.getElementById("image");
+  const titleInput = document.querySelector('[name="title"]');
+  const submitBtn = document.querySelector("#formAdd .btn__form__input");
+  let valid = true;
+
+  // Vérification image
+  const file = imageInput.files[0];
+  if (
+    !file ||
+    file.size > 4 * 1024 * 1024 ||
+    !["image/jpeg", "image/png"].includes(file.type)
+  ) {
+    valid = false;
+  }
+
+  // Vérification titre
+  if (!titleInput.value.trim()) {
+    valid = false;
+  }
+
+  if (!valid) {
+    submitBtn.disabled = true;
+    submitBtn.style.backgroundColor = "#cccccc";
+  } else {
+    submitBtn.disabled = false;
+    submitBtn.style.backgroundColor = "#1d6154";
+  }
+}
+
 // ce code est pour la prévisualisation de l'image avant de l'envoyer
 document.getElementById("image").addEventListener("change", (e) => {
   const file = e.target.files[0];
   const previewContainer = document.querySelector(".image__selector");
 
+  // Supprimer l'ancienne prévisualisation
   const existingPreview = previewContainer.querySelector("img");
   if (existingPreview) {
-    previewContainer.remove();
+    existingPreview.remove();
+  }
+
+  // Supprimer l'ancien message d'erreur
+  const oldError = document.getElementById("imageError");
+  if (oldError) oldError.remove();
+
+  // Vérification taille (max 4 Mo)
+  if (file && file.size > 4 * 1024 * 1024) {
+    const error = document.createElement("div");
+    error.id = "imageError";
+    error.style.color = "red";
+    error.textContent = "L'image ne doit pas dépasser 4 Mo.";
+    previewContainer.appendChild(error);
+    e.target.value = "";
+    checkFormValidity();
+    return;
+  }
+
+  // Vérification format (jpg ou png)
+  if (file && !["image/jpeg", "image/png"].includes(file.type)) {
+    const error = document.createElement("div");
+    error.id = "imageError";
+    error.style.color = "red";
+    error.textContent = "Le format doit être JPG ou PNG.";
+    previewContainer.appendChild(error);
+    e.target.value = "";
+    checkFormValidity();
+    return;
   }
 
   if (file) {
@@ -72,13 +132,35 @@ document.getElementById("image").addEventListener("change", (e) => {
     };
     reader.readAsDataURL(file);
   }
+  checkFormValidity();
 });
+
+// Vérification dynamique sur le titre
+document
+  .querySelector('[name="title"]')
+  .addEventListener("input", checkFormValidity);
+// Initialisation au chargement
+window.addEventListener("DOMContentLoaded", checkFormValidity);
 
 document.getElementById("formAdd").addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // Supprimer l'ancien message d'erreur titre
+  const oldTitleError = document.getElementById("titleError");
+  if (oldTitleError) oldTitleError.remove();
+
   const form = e.target;
   const formData = new FormData(form);
+  const title = form.querySelector('[name="title"]').value.trim();
+
+  if (!title) {
+    const error = document.createElement("div");
+    error.id = "titleError";
+    error.style.color = "red";
+    error.textContent = "Veuillez renseigner un titre.";
+    form.querySelector(".form__group--title").appendChild(error);
+    return;
+  }
 
   try {
     const response = await postData("works", formData, true, true);
