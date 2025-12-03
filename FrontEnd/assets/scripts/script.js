@@ -114,9 +114,9 @@ const generateBtnTrash = (id, figure) => {
   workDelete.classList.add("modal__works__delete");
   workDelete.addEventListener("click", async () => {
     try {
-      await deleteData(`works/${id}`);
+      const response = await deleteData(`works/${id}`);
 
-      if (response.ok) {
+      if (response) {
         // Supprimer la figure de la modale
         figure.remove();
         // Supprimer la figure de la galerie principale

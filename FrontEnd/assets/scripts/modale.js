@@ -5,15 +5,36 @@ const toggleModal = () => {
   const modal = document.querySelector(".modal");
   const closeModalBtn = document.querySelector(".closer");
 
+  // Fonction pour supprimer la prévisualisation d'image et réafficher '+ Ajouter photo'
+  function removeImagePreview() {
+    const previewContainer = document.querySelector(".file__label");
+    if (previewContainer) {
+      const existingPreview = previewContainer.querySelector("img");
+      if (existingPreview) existingPreview.remove();
+      // Supprimer aussi le message d'erreur éventuel
+      const oldError = document.getElementById("imageError");
+      if (oldError) oldError.remove();
+      // Réafficher le bouton '+ Ajouter photo' si absent
+      if (!previewContainer.querySelector(".add-photo-btn")) {
+        const addBtn = document.createElement("span");
+        addBtn.className = "add-photo-btn";
+        addBtn.textContent = "+ Ajouter photo";
+        previewContainer.appendChild(addBtn);
+      }
+    }
+  }
+
   // Fermer la modale
   closeModalBtn.addEventListener("click", () => {
     modal.style.display = "none";
+    removeImagePreview();
   });
 
   // Fermer la modale en cliquant à l'extérieur de celle-ci
   window.addEventListener("click", (e) => {
     if (e.target === modal) {
       modal.style.display = "none";
+      removeImagePreview();
     }
   });
 
@@ -22,6 +43,7 @@ const toggleModal = () => {
     if (e.key === "Escape" || e.key === "Esc") {
       e.preventDefault();
       modal.style.display = "none";
+      removeImagePreview();
     }
   });
 };
@@ -47,6 +69,20 @@ document.querySelector(".modal__add__btn").addEventListener("click", (e) => {
 document.querySelector(".backBtn").addEventListener("click", (e) => {
   e.preventDefault();
   toggleView("modal__works", "modal__add");
+  // Supprimer la prévisualisation et réafficher '+ Ajouter photo' lors du retour à la galerie
+  const previewContainer = document.querySelector(".file__label");
+  if (previewContainer) {
+    const existingPreview = previewContainer.querySelector("img");
+    if (existingPreview) existingPreview.remove();
+    const oldError = document.getElementById("imageError");
+    if (oldError) oldError.remove();
+    if (!previewContainer.querySelector(".add-photo-btn")) {
+      const addBtn = document.createElement("span");
+      addBtn.className = "add-photo-btn";
+      addBtn.textContent = "+ Ajouter photo";
+      previewContainer.appendChild(addBtn);
+    }
+  }
 });
 
 // Vérification dynamique du formulaire
@@ -83,17 +119,29 @@ function checkFormValidity() {
 // ce code est pour la prévisualisation de l'image avant de l'envoyer
 document.getElementById("image").addEventListener("change", (e) => {
   const file = e.target.files[0];
-  const previewContainer = document.querySelector(".image__selector");
+  const previewContainer = document.querySelector(".file__label");
 
   // Supprimer l'ancienne prévisualisation
   const existingPreview = previewContainer.querySelector("img");
   if (existingPreview) {
     existingPreview.remove();
   }
-
   // Supprimer l'ancien message d'erreur
   const oldError = document.getElementById("imageError");
   if (oldError) oldError.remove();
+  // Réafficher '+ Ajouter photo' si aucune image
+  if (!e.target.files[0]) {
+    if (!previewContainer.querySelector(".add-photo-btn")) {
+      const addBtn = document.createElement("span");
+      addBtn.className = "add-photo-btn";
+      addBtn.textContent = "+ Ajouter photo";
+      previewContainer.appendChild(addBtn);
+    }
+  } else {
+    // Si une image est sélectionnée, retirer le bouton
+    const addBtn = previewContainer.querySelector(".add-photo-btn");
+    if (addBtn) addBtn.remove();
+  }
 
   // Vérification taille (max 4 Mo)
   if (file && file.size > 4 * 1024 * 1024) {
@@ -119,16 +167,16 @@ document.getElementById("image").addEventListener("change", (e) => {
     return;
   }
 
+  // Afficher la prévisualisation de l'image dans le label
   if (file) {
     const reader = new FileReader();
     reader.onload = (event) => {
+      previewContainer.innerHTML = "";
       const img = document.createElement("img");
       img.src = event.target.result;
       img.style.maxWidth = "100%";
       img.style.maxHeight = "100%";
       previewContainer.appendChild(img);
-
-      document.getElementById("addImage").style.display = "none";
     };
     reader.readAsDataURL(file);
   }
@@ -165,12 +213,9 @@ document.getElementById("formAdd").addEventListener("submit", async (e) => {
   try {
     const response = await postData("works", formData, true, true);
 
-    if (!response.ok) {
+    if (!response) {
       throw new Error(`Failed to add the work: ${response.status}`);
     }
-
-    // Réinitialiser le formulaire
-    form.reset();
 
     // Supprimer l'image de prévisualisation
     const previewImage = document.querySelector(".image__selector img");
@@ -178,13 +223,14 @@ document.getElementById("formAdd").addEventListener("submit", async (e) => {
       previewImage.remove();
     }
 
+    // Réinitialiser le formulaire
+    form.reset();
+
     // Mettre à jour la galerie principale
+    window.allWorks.push(response);
 
-    const newWork = await response.json();
-    window.allWorks.push(newWork);
-
-    const newFigure = generateFigure(newWork);
-    const newFigureForModal = generateFigure(newWork, true);
+    const newFigure = generateFigure(response);
+    const newFigureForModal = generateFigure(response, true);
     document.querySelector(".gallery").appendChild(newFigure);
     document.querySelector(".modal__works").appendChild(newFigureForModal);
 
